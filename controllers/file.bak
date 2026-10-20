@@ -1,0 +1,99 @@
+function getAllRides(req, res) {
+    res.send(
+      "🤖 Accounts Route with GET method - this endpoint will get all of the rides from the database"
+    );
+  }
+  
+  function createRides(req, res) {
+    res.send(
+      "🤖 Accounts Route with POST method - this endpoint will create a new ride in the database"
+    );
+  }
+  
+  function getRidesByCar(req, res) {
+    const car = req.params.id; // <-- this is where we get the id from the request url
+    res.send(
+      "🤖 Accounts Route with GET method - this endpoint will get a ride by car make from the database. The make is: " +
+        car
+    );
+  }
+  
+  function updateRidesByCar(req, res) {
+    const car = req.params.id; // <-- this is where we get the id from the request url
+    res.send(
+      "🤖 Accounts Route with PUT method - this endpoint will update a ride by car make from the database. The make is: " +
+        car
+    );
+  }
+  
+  function deleteRidesByCar(req, res) {
+    const car = req.params.id; // <-- this is where we get the id from the request url
+    res.send(
+      "🤖 Rides Route with DELETE method - this endpoint will delete a ride by car make from the database. The make is: " +
+        car
+    );
+  }
+  
+  export default {
+    getAllRides,
+    createRides,
+    getRidesByCar,
+    updateRidesByCar,
+    deleteRidesByCar,
+  };
+
+
+  async function updateAccountById(req, res, next) {
+  try {
+    const accountId = req.params.id;
+    req.body.id = accountId;
+    const { error, value } = accountSchema.validate(req.body);
+
+    if (error) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
+
+    const { balance, sort_code, account_number } = value;
+
+    // Get the movie from DynamoDB
+    const getParams = {
+      TableName: "Accounts",
+      Key: { id: accountId },
+    };
+
+    const getCommand = new GetCommand(getParams);
+
+    const result = await database.send(getCommand);
+
+    const account = result.Item;
+
+    if (!account) {
+      return res.status(404).json({ message: "No account found" });
+    }
+
+    // Update the account in DynamoDB
+    const updateParams = {
+      TableName: "Accounts",
+      Key: { id: accountId },
+      UpdateExpression:
+        "set #balance = :balance, #sort_code = :sort_code, #account_number = :account_number",
+      ExpressionAttributeNames: {
+        "#balance": "balance",
+        "#sort_code": "sort_code",
+        "#account_number": "account_number",
+      },
+      ExpressionAttributeValues: {
+        ":balance": balance,
+        ":sort_code": sort_code,
+        ":account_number": account_number,
+      },
+      ReturnValues: "ALL_NEW",
+    };
+    const updateCommand = new UpdateCommand(updateParams);
+    const updatedAccount = await database.send(updateCommand);
+
+    res.status(200).json(updatedAccount.Attributes);
+  } catch (err) {
+    next(err);
+  }
+}
