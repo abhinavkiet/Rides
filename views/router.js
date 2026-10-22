@@ -7,7 +7,7 @@ Router.route("/rides")
   .get(ridesController.getAllRides)
   .post(ridesController.createRides);
 
-  Router.route("/rides/:car") 
+  Router.route("/rides/:id") 
   .get(ridesController.getRidesByCar)
   .post(ridesController.updateRidesbyCar)
   .delete(ridesController.deleteRidesByCar);
